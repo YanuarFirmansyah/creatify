@@ -7,16 +7,18 @@ import creatifyLogo from "@/assets/creatify.png";
 const Login = () => {
      const [email, setEmail] = useState("");
      const [password, setPassword] = useState("");
+     const [role, setRole] = useState("user"); // <<< 1. Tambahkan state untuk role, defaultnya 'user'
      const navigate = useNavigate();
      const { login } = useAuth();
 
      const handleSubmit = (e) => {
           e.preventDefault();
-          // Simulasi login: user id dan name dummy
+          // 2. Sertakan 'role' saat membuat dummy user
           const dummyUser = {
                id: 1,
                name: "Budi",
                email,
+               role: role, // Masukkan role yang dipilih
           };
           login(dummyUser);
           navigate("/");
@@ -72,6 +74,19 @@ const Login = () => {
                                    onChange={(e) => setPassword(e.target.value)}
                                    required
                               />
+                         </div>
+                         <div className="mb-6">
+                              <label className="block text-sm font-medium text-gray-600 mb-2">Login sebagai:</label>
+                              <div className="flex space-x-4">
+                                   <label className="flex items-center">
+                                        <input type="radio" name="role" value="user" checked={role === 'user'} onChange={(e) => setRole(e.target.value)} className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300" />
+                                        <span className="ml-2 text-sm text-gray-700">User</span>
+                                   </label>
+                                   <label className="flex items-center">
+                                        <input type="radio" name="role" value="freelancer" checked={role === 'freelancer'} onChange={(e) => setRole(e.target.value)} className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300" />
+                                        <span className="ml-2 text-sm text-gray-700">Freelancer</span>
+                                   </label>
+                              </div>
                          </div>
                          <div className="flex justify-between items-center text-sm mb-8">
                               <Link

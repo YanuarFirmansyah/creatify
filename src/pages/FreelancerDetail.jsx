@@ -151,6 +151,7 @@ const ServiceSummary = () => (
 );
 
 const FreelancerDetail = () => {
+     const { id } = useParams();
      const [activeTab, setActiveTab] = useState("Basic");
      const images = [
           "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800",
@@ -296,9 +297,12 @@ const FreelancerDetail = () => {
                                         <button className="w-full border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-lg hover:bg-gray-100 transition">
                                              Hubungi saya
                                         </button>
-                                        <button className="w-full bg-purple-600 text-white font-semibold py-2.5 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-2">
+                                        <Link 
+                                             to={`/freelancer/${id}/order`} // Gunakan ID dinamis dari useParams
+                                             className="w-full bg-purple-600 text-white font-semibold py-2.5 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-2"
+                                        >
                                              Order <ArrowRight size={16} />
-                                        </button>
+                                        </Link>
                                    </div>
                               </div>
                          </div>

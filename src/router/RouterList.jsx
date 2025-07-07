@@ -10,6 +10,15 @@ import HomePage from "../pages/HomePage.jsx";
 import FreelancerDetail from "../pages/FreelancerDetail.jsx";
 import ServiceCategory from "../pages/ServiceCategory.jsx";
 import ReviewList from "../pages/ReviewList.jsx";
+import OrderPage from "../pages/OrderPage.jsx";
+import PaymentPage from "../pages/PaymentPage.jsx";
+import FreelancerRegisterPage from "../pages/auth/FreelancerRegister.jsx";
+import FreelancerRegister2 from "../pages/auth/FreelancerRegister2.jsx";
+import FreelancerRegister3 from "../pages/auth/FreelancerRegister3.jsx";
+import FreelancerDashboard from "../pages/FreelancerDashboard.jsx";
+import MyFreelancerProfile from "../pages/MyFreelancerProfile.jsx";
+
+
 
 // Buat instance router
 const router = createBrowserRouter([
@@ -27,8 +36,20 @@ const router = createBrowserRouter([
                     element: <FreelancerDetail />,
                },
                {
+                    path: "freelancer/:id/order", 
+                    element: <OrderPage />,
+               },
+               {
+                    path: "payment/:paymentId", 
+                    element: <PaymentPage />,
+               },
+               {
                     path: "freelancer/:id/profile",
                     element: <FreelancerProfile />,
+               },
+               {
+                    path: "freelancer/profile",
+                    element: <MyFreelancerProfile />,
                },
                {
                     path: "service/:category",
@@ -46,6 +67,10 @@ const router = createBrowserRouter([
                     path: "transactions",
                     element: <TransactionHistory />,
                },
+               {
+                    path: "freelancer/dashboard",
+                    element: <FreelancerDashboard />,
+               },
           ],
      },
      {
@@ -58,6 +83,19 @@ const router = createBrowserRouter([
           path: "/register",
           element: <Register />,
      },
+     {
+          // Route untuk halaman register freelancer
+          path: "/freelancer/register",
+          element: <FreelancerRegisterPage />,
+     },
+     {
+        path: "/freelancer/register/step2",
+        element: <FreelancerRegister2 />,
+    },
+    {
+        path: "/freelancer/register/step3",
+        element: <FreelancerRegister3 />,
+    },
 ]);
 
 // Ekspor instance router agar bisa digunakan di file lain
