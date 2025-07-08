@@ -4,6 +4,7 @@ import TransactionHistory from "../pages/TransactionHistory.jsx";
 // src/router/RouterList.jsx
 import { createBrowserRouter } from "react-router-dom";
 import App from "../App.jsx";
+import AuthLayout from "./AuthLayout.jsx"; // Impor layout baru
 import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
 import HomePage from "../pages/HomePage.jsx";
@@ -17,8 +18,6 @@ import FreelancerRegister2 from "../pages/auth/FreelancerRegister2.jsx";
 import FreelancerRegister3 from "../pages/auth/FreelancerRegister3.jsx";
 import FreelancerDashboard from "../pages/FreelancerDashboard.jsx";
 import MyFreelancerProfile from "../pages/MyFreelancerProfile.jsx";
-
-
 
 // Buat instance router
 const router = createBrowserRouter([
@@ -36,11 +35,11 @@ const router = createBrowserRouter([
                     element: <FreelancerDetail />,
                },
                {
-                    path: "freelancer/:id/order", 
+                    path: "freelancer/:id/order",
                     element: <OrderPage />,
                },
                {
-                    path: "payment/:paymentId", 
+                    path: "payment/:paymentId",
                     element: <PaymentPage />,
                },
                {
@@ -74,28 +73,31 @@ const router = createBrowserRouter([
           ],
      },
      {
-          // Ini adalah route terpisah untuk halaman login yang tidak menggunakan layout App
-          path: "/login",
-          element: <Login />,
+          // Grup rute otentikasi di bawah AuthLayout
+          element: <AuthLayout />,
+          children: [
+               {
+                    path: "/login",
+                    element: <Login />,
+               },
+               {
+                    path: "/register",
+                    element: <Register />,
+               },
+               {
+                    path: "/freelancer/register",
+                    element: <FreelancerRegisterPage />,
+               },
+               {
+                    path: "/freelancer/register/step2",
+                    element: <FreelancerRegister2 />,
+               },
+               {
+                    path: "/freelancer/register/step3",
+                    element: <FreelancerRegister3 />,
+               },
+          ],
      },
-     {
-          // Route untuk halaman register
-          path: "/register",
-          element: <Register />,
-     },
-     {
-          // Route untuk halaman register freelancer
-          path: "/freelancer/register",
-          element: <FreelancerRegisterPage />,
-     },
-     {
-        path: "/freelancer/register/step2",
-        element: <FreelancerRegister2 />,
-    },
-    {
-        path: "/freelancer/register/step3",
-        element: <FreelancerRegister3 />,
-    },
 ]);
 
 // Ekspor instance router agar bisa digunakan di file lain
