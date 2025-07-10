@@ -1,48 +1,99 @@
 // src/context/AuthContext.jsx
 
 import React, { createContext, useContext, useState } from "react";
+import { authAPI, setAuthToken, getAuthToken } from "../services/api";
 
 // Context untuk status login user
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
-  });
+     const [user, setUser] = useState(() => {
+          const saved = localStorage.getItem("user");
+          const token = getAuthToken();
+          return saved && token ? JSON.parse(saved) : null;
+     });
 
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-  };
+     const [loading, setLoading] = useState(false);
+     const [error, setError] = useState(null);
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-  };
+     const login = async (credentials) => {
+          setLoading(true);
+          setError(null);
 
-  // <<< 1. TAMBAHKAN FUNGSI BARU DI SINI
-  const switchRole = (newRole) => {
-    // Pastikan ada user yang sedang login
-    if (!user) return;
+          try {
+               const response = await authAPI.login(credentials);
 
-    // Buat objek user yang diperbarui dengan role baru
-    // Spread syntax (...) digunakan untuk menyalin semua properti user yang ada
-    const updatedUser = { ...user, role: newRole };
+               // Save token and user data
+               setAuthToken(response.token);
+               setUser(response.user);
+               localStorage.setItem("user", JSON.stringify(response.user));
 
-    // Perbarui state dan localStorage dengan data user yang baru
-    setUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-  };
+               return response;
+          } catch (err) {
+               setError(err.message);
+               throw err;
+          } finally {
+               setLoading(false);
+          }
+     };
 
-  // <<< 2. TAMBAHKAN 'switchRole' KE VALUE YANG DISEDIAKAN
-  return (
-    <AuthContext.Provider value={{ user, login, logout, switchRole }}>
-      {children}
-    </AuthContext.Provider>
-  );
+     const register = async (userData) => {
+          setLoading(true);
+          setError(null);
+
+          try {
+               const response = await authAPI.register(userData);
+               return response;
+          } catch (err) {
+               setError(err.message);
+               throw err;
+          } finally {
+               setLoading(false);
+          }
+     };
+
+     const logout = () => {
+          setUser(null);
+          setAuthToken(null);
+          localStorage.removeItem("user");
+          setError(null);
+     };
+
+     const switchRole = (newRole) => {
+          // Pastikan ada user yang sedang login
+          if (!user) return;
+
+          // Buat objek user yang diperbarui dengan role baru
+          // Spread syntax (...) digunakan untuk menyalin semua properti user yang ada
+          const updatedUser = { ...user, role: newRole };
+
+          // Perbarui state dan localStorage dengan data user yang baru
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+     };
+
+     const clearError = () => {
+          setError(null);
+     };
+
+     return (
+          <AuthContext.Provider
+               value={{
+                    user,
+                    login,
+                    logout,
+                    register,
+                    switchRole,
+                    loading,
+                    error,
+                    clearError,
+               }}
+          >
+               {children}
+          </AuthContext.Provider>
+     );
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+     return useContext(AuthContext);
 }

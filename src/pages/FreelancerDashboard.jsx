@@ -6,6 +6,7 @@ import { Navigate } from "react-router-dom";
 import ProfileCard from "../components/freelancer/ProfileCard";
 import StatusCard from "../components/freelancer/StatusCard";
 import ActiveOrdersCard from "../components/freelancer/ActiveOrdersCard";
+import ServiceManagementCard from "../components/freelancer/ServiceManagementCard";
 
 // ===================================================================
 // KOMPONEN HALAMAN UTAMA
@@ -44,6 +45,9 @@ export default function FreelancerDashboard() {
                          <ProfileCard user={user} />
                          <StatusCard stats={dummyStats} />
                          <ActiveOrdersCard orders={dummyOrders} />
+                    </div>
+                    <div className="mt-8">
+                         <ServiceManagementCard />
                     </div>
                </main>
           </div>

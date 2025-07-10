@@ -18,6 +18,7 @@ import FreelancerRegister2 from "../pages/auth/FreelancerRegister2.jsx";
 import FreelancerRegister3 from "../pages/auth/FreelancerRegister3.jsx";
 import FreelancerDashboard from "../pages/FreelancerDashboard.jsx";
 import MyFreelancerProfile from "../pages/MyFreelancerProfile.jsx";
+import ManageService from "../pages/ManageService.jsx";
 
 // Buat instance router
 const router = createBrowserRouter([
@@ -69,6 +70,14 @@ const router = createBrowserRouter([
                {
                     path: "freelancer/dashboard",
                     element: <FreelancerDashboard />,
+               },
+               {
+                    path: "freelancer/services/new",
+                    element: <ManageService />,
+               },
+               {
+                    path: "freelancer/services/edit/:serviceId",
+                    element: <ManageService />,
                },
           ],
      },
