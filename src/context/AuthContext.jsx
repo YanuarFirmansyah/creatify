@@ -42,10 +42,26 @@ export function AuthProvider({ children }) {
           setError(null);
 
           try {
+               console.log("Attempting to register user:", userData);
                const response = await authAPI.register(userData);
+               console.log("Register response:", response);
                return response;
           } catch (err) {
-               setError(err.message);
+               console.error("Registration error:", err);
+
+               // Handle specific error cases
+               if (err.message.includes("Email sudah digunakan")) {
+                    setError(
+                         "Email sudah terdaftar. Silakan gunakan email lain atau login."
+                    );
+               } else if (err.message.includes("Gagal melakukan registrasi")) {
+                    setError(
+                         "Gagal melakukan registrasi. Silakan coba lagi atau hubungi admin."
+                    );
+               } else {
+                    setError(err.message);
+               }
+
                throw err;
           } finally {
                setLoading(false);
