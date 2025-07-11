@@ -7,14 +7,28 @@ import { authAPI, setAuthToken, getAuthToken } from "../services/api";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-     const [user, setUser] = useState(() => {
-          const saved = localStorage.getItem("user");
-          const token = getAuthToken();
-          return saved && token ? JSON.parse(saved) : null;
-     });
-
-     const [loading, setLoading] = useState(false);
+     const [user, setUser] = useState(null);
+     const [loading, setLoading] = useState(true);
      const [error, setError] = useState(null);
+
+     // Initialize user from localStorage on mount
+     React.useEffect(() => {
+          try {
+               const saved = localStorage.getItem("user");
+               const token = getAuthToken();
+               if (saved && token) {
+                    const parsedUser = JSON.parse(saved);
+                    setUser(parsedUser);
+               }
+          } catch (err) {
+               console.error("Error parsing user from localStorage:", err);
+               // Clear corrupted data
+               localStorage.removeItem("user");
+               setAuthToken(null);
+          } finally {
+               setLoading(false);
+          }
+     }, []);
 
      const login = async (credentials) => {
           setLoading(true);
