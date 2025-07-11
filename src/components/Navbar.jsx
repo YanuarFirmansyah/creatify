@@ -69,9 +69,9 @@ const Navbar = () => {
                <div className="relative group">
                     <button className="flex items-center space-x-2 focus:outline-none">
                          <span className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-bold overflow-hidden">
-                              {user.avatar ? (
+                              {user.profile_image || user.avatar ? (
                                    <img
-                                        src={user.avatar}
+                                        src={user.profile_image || user.avatar}
                                         alt="avatar"
                                         className="w-full h-full object-cover rounded-full"
                                    />

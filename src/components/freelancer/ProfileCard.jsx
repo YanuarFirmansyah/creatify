@@ -5,8 +5,22 @@ const ProfileCard = ({ user }) => {
      // Menggunakan data dari useAuth dan menambahkan data dummy
      const profile = {
           name: user?.name || "Freelancer Name",
-          username: user?.username || "@username",
-          avatar: user?.avatar || null,
+          username: (() => {
+               // Coba ambil username dari user context
+               const apiUsername = user?.username;
+               if (apiUsername) return apiUsername;
+
+               // Jika tidak ada username, buat dari email
+               const email = user?.email;
+               if (email) {
+                    const emailPrefix = email.split("@")[0];
+                    return `@${emailPrefix}`;
+               }
+
+               // Fallback
+               return "@username";
+          })(),
+          avatar: user?.profile_image || user?.avatar || null,
           id: user?.id || 1,
      };
 
