@@ -158,6 +158,110 @@ export const userAPI = {
           console.log("Upload image response status:", response.status);
           return handleResponse(response);
      },
+
+     // Portfolio management
+     getPortfolio: async () => {
+          const token = getAuthToken();
+
+          if (!token) {
+               throw new Error("Token tidak ditemukan - silakan login ulang");
+          }
+
+          // Jika backend memerlukan body untuk GET request
+          const response = await fetch(`${API_BASE_URL}/portofolio/all`, {
+               method: "GET",
+               headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+               },
+               // Note: GET request biasanya tidak memerlukan body
+               // Jika backend memerlukan body, gunakan POST method
+          });
+
+          console.log("Get portofolio response status:", response.status);
+          return handleResponse(response);
+     },
+
+     // Alternative: Jika backend memerlukan body untuk get portfolio
+     getPortfolioWithBody: async (userId = null) => {
+          const token = getAuthToken();
+
+          if (!token) {
+               throw new Error("Token tidak ditemukan - silakan login ulang");
+          }
+
+          const body = userId ? { user_id: userId } : {};
+
+          const response = await fetch(`${API_BASE_URL}/portofolio/all`, {
+               method: "POST", // Gunakan POST jika backend memerlukan body
+               headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+               },
+               body: JSON.stringify(body),
+          });
+
+          console.log(
+               "Get portofolio with body response status:",
+               response.status
+          );
+          return handleResponse(response);
+     },
+
+     uploadPortfolioImage: async (imageFile, title = "", description = "") => {
+          const token = getAuthToken();
+
+          if (!token) {
+               throw new Error("Token tidak ditemukan - silakan login ulang");
+          }
+
+          const formData = new FormData();
+          formData.append("title", title);
+          formData.append("description", description);
+          formData.append("image", imageFile); // field name sesuai backend: 'image'
+
+          console.log("Uploading portfolio image:", imageFile.name);
+
+          const response = await fetch(`${API_BASE_URL}/portofolio/create`, {
+               method: "POST",
+               headers: {
+                    Authorization: `Bearer ${token}`,
+                    // JANGAN set Content-Type, biarkan browser yang set untuk FormData!
+               },
+               body: formData,
+          });
+
+          console.log(
+               "Upload portfolio image response status:",
+               response.status
+          );
+          return handleResponse(response);
+     },
+
+     deletePortfolioImage: async (imageId) => {
+          const token = getAuthToken();
+
+          if (!token) {
+               throw new Error("Token tidak ditemukan - silakan login ulang");
+          }
+
+          const response = await fetch(
+               `${API_BASE_URL}/portofolio/delete/${imageId}`,
+               {
+                    method: "DELETE",
+                    headers: {
+                         Authorization: `Bearer ${token}`,
+                         "Content-Type": "application/json",
+                    },
+               }
+          );
+
+          console.log(
+               "Delete portfolio image response status:",
+               response.status
+          );
+          return handleResponse(response);
+     },
 };
 
 // Helper function to get auth token from localStorage

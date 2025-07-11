@@ -12,6 +12,7 @@ import {
      Mail,
 } from "lucide-react";
 import ProfileImageUpload from "../components/ProfileImageUpload";
+import PortfolioManager from "../components/PortfolioManager";
 import { userAPI } from "../services/api";
 
 // ===================================================================
@@ -37,14 +38,17 @@ const dummyPortfolio = Array(6).fill(
 export default function MyFreelancerProfile() {
      const { user, setUser } = useAuth();
      const [userDetail, setUserDetail] = useState(null);
+     const [portfolio, setPortfolio] = useState([]);
      const [loading, setLoading] = useState(true);
      const [error, setError] = useState(null);
 
-     // Fetch user detail from API
+     // Fetch user detail and portfolio from API
      useEffect(() => {
-          const fetchUserDetail = async () => {
+          const fetchData = async () => {
                try {
                     setLoading(true);
+
+                    // Fetch user detail
                     const detail = await userAPI.getUserDetail();
                     setUserDetail(detail);
 
@@ -55,6 +59,94 @@ export default function MyFreelancerProfile() {
                               ...detail,
                          }));
                     }
+
+                    // Fetch portfolio (if API exists)
+                    try {
+                         // Coba getPortfolio biasa dulu
+                         const portfolioData = await userAPI.getPortfolio();
+                         console.log("Portfolio data from API:", portfolioData);
+
+                         if (
+                              portfolioData.portfolio &&
+                              portfolioData.portfolio.length > 0
+                         ) {
+                              // Ensure all URLs are absolute
+                              const processedPortfolio =
+                                   portfolioData.portfolio.map((item) => ({
+                                        ...item,
+                                        url:
+                                             item.url &&
+                                             !item.url.startsWith("data:") &&
+                                             !item.url.startsWith("http")
+                                                  ? `https://creatify-backend-production.up.railway.app${item.url}`
+                                                  : item.url,
+                                   }));
+                              setPortfolio(processedPortfolio);
+                              console.log(
+                                   "Processed portfolio:",
+                                   processedPortfolio
+                              );
+                         } else {
+                              setPortfolio([]);
+                         }
+                    } catch (error) {
+                         console.log(
+                              "Standard getPortfolio failed:",
+                              error.message
+                         );
+                         try {
+                              // Jika gagal, coba dengan body (mengirim user_id)
+                              const portfolioData =
+                                   await userAPI.getPortfolioWithBody(user?.id);
+                              console.log(
+                                   "Portfolio data with body:",
+                                   portfolioData
+                              );
+
+                              if (
+                                   portfolioData.portfolio &&
+                                   portfolioData.portfolio.length > 0
+                              ) {
+                                   // Ensure all URLs are absolute
+                                   const processedPortfolio =
+                                        portfolioData.portfolio.map((item) => ({
+                                             ...item,
+                                             url:
+                                                  item.url &&
+                                                  !item.url.startsWith(
+                                                       "data:"
+                                                  ) &&
+                                                  !item.url.startsWith("http")
+                                                       ? `https://creatify-backend-production.up.railway.app${item.url}`
+                                                       : item.url,
+                                        }));
+                                   setPortfolio(processedPortfolio);
+                                   console.log(
+                                        "Processed portfolio with body:",
+                                        processedPortfolio
+                                   );
+                              } else {
+                                   setPortfolio([]);
+                              }
+                         } catch (bodyError) {
+                              console.log(
+                                   "Portfolio API not available yet, using dummy data:",
+                                   bodyError.message
+                              );
+                              // Use dummy data for now
+                              setPortfolio(
+                                   dummyPortfolio.map((url, index) => ({
+                                        id: index + 1,
+                                        url: url,
+                                        title: `Portfolio ${index + 1}`,
+                                        description: `Deskripsi portfolio ${
+                                             index + 1
+                                        }`,
+                                        isNew: false,
+                                   }))
+                              );
+                         }
+                    }
                } catch (err) {
                     console.error("Failed to fetch user detail:", err);
                     setError(err.message);
@@ -63,7 +155,7 @@ export default function MyFreelancerProfile() {
                }
           };
 
-          fetchUserDetail();
+          fetchData();
      }, []);
 
      // Handle image update
@@ -79,6 +171,47 @@ export default function MyFreelancerProfile() {
                     ...prevUser,
                     profile_image: newImageUrl,
                }));
+          }
+     };
+
+     // Handle portfolio update
+     const handlePortfolioUpdate = async (newPortfolio) => {
+          // Selalu fetch ulang dari backend setelah ada perubahan
+          try {
+               setLoading(true);
+               const portfolioData = await userAPI.getPortfolio();
+               if (
+                    portfolioData.portfolio &&
+                    portfolioData.portfolio.length > 0
+               ) {
+                    // Ensure all URLs are absolute
+                    const processedPortfolio = portfolioData.portfolio.map(
+                         (item) => ({
+                              ...item,
+                              url:
+                                   item.url &&
+                                   !item.url.startsWith("data:") &&
+                                   !item.url.startsWith("http")
+                                        ? `https://creatify-backend-production.up.railway.app${item.url}`
+                                        : item.url,
+                         })
+                    );
+                    setPortfolio(processedPortfolio);
+                    console.log(
+                         "✅ Portfolio refreshed from backend:",
+                         processedPortfolio
+                    );
+               } else {
+                    setPortfolio([]);
+               }
+          } catch (error) {
+               console.log(
+                    "⚠️ Could not refresh from backend, using local data:",
+                    error.message
+               );
+               if (newPortfolio) setPortfolio(newPortfolio); // fallback ke data lokal jika gagal fetch
+          } finally {
+               setLoading(false);
           }
      };
 
@@ -253,30 +386,13 @@ export default function MyFreelancerProfile() {
                          <div className="lg:col-span-1">
                               {/* Kartu Portofolio */}
                               <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                                   <div className="flex justify-between items-center mb-4">
-                                        <h2 className="text-xl font-bold text-gray-800">
-                                             Portofolio Saya :
-                                        </h2>
-                                        <button className="bg-purple-100 text-purple-700 text-sm font-semibold px-4 py-2 rounded-md hover:bg-purple-200 transition">
-                                             Tambah Portofolio
-                                        </button>
-                                   </div>
-                                   <div className="grid grid-cols-2 gap-4">
-                                        {dummyPortfolio.map((imgSrc, index) => (
-                                             <div
-                                                  key={index}
-                                                  className="rounded-lg overflow-hidden"
-                                             >
-                                                  <img
-                                                       src={imgSrc}
-                                                       alt={`Portfolio item ${
-                                                            index + 1
-                                                       }`}
-                                                       className="w-full aspect-square object-cover"
-                                                  />
-                                             </div>
-                                        ))}
-                                   </div>
+                                   <PortfolioManager
+                                        portfolio={portfolio}
+                                        onPortfolioUpdate={
+                                             handlePortfolioUpdate
+                                        }
+                                        maxImages={6}
+                                   />
                               </div>
                          </div>
                     </div>

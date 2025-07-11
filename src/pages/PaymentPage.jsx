@@ -1,12 +1,8 @@
-// src/pages/PaymentPage.jsx
-import React from "react";
-import qrisLogo from "../assets/qris-logo.png"; // Pastikan path benar
-import qrCodeImage from "../assets/placeholder-qr.png"; // Pastikan path benar
+import React, { useState, useEffect } from "react";
+import qrisLogo from "../assets/qris-logo.png";
+import qrCodeImage from "../assets/placeholder-qr.png";
 import PaymentStepper from "../components/payment/PaymentStepper";
 
-// ===================================================================
-// KOMPONEN HALAMAN UTAMA
-// ===================================================================
 const paymentDetails = {
      productName: "Muhammad Sumbul / Basic Package",
      total: 15000,
@@ -15,8 +11,71 @@ const paymentDetails = {
 };
 
 export default function PaymentPage() {
-     // Untuk demo, kita set step ke 1 (Menunggu Pembayaran)
-     // 0 = Pesanan Dibuat, 1 = Menunggu Pembayaran, 2 = Selesai
+     const [loading, setLoading] = useState(false);
+
+     // Load Snap.js SDK
+     useEffect(() => {
+          const script = document.createElement("script");
+          script.src = "https://app.sandbox.midtrans.com/snap/snap.js";
+          script.setAttribute("data-client-key", "Mid-client-U8_UrgvuqNq8gg-Q"); // Ganti clientKey kamu
+          script.async = true;
+          document.body.appendChild(script);
+          return () => {
+               document.body.removeChild(script);
+          };
+     }, []);
+
+     const handlePay = async () => {
+          setLoading(true);
+          try {
+               // Buat order_id unik
+               const orderData = {
+                    order_id: "ORDER-" + Date.now(),
+                    amount: 15000,
+                    first_name: "Budi",
+                    email: "budi@email.com",
+               };
+
+               const res = await fetch(
+                    "https://payment-service-creatify-production.up.railway.app/payments",
+                    {
+                         method: "POST",
+                         headers: { "Content-Type": "application/json" },
+                         body: JSON.stringify(orderData),
+                    }
+               );
+               const data = await res.json();
+               if (data.token) {
+                    window.snap.pay(data.token, {
+                         onSuccess: (result) => {
+                              console.log("Payment success:", result);
+                              alert("Pembayaran berhasil!");
+                         },
+                         onPending: (result) => {
+                              console.log("Payment pending:", result);
+                              alert("Menunggu pembayaran...");
+                         },
+                         onError: (error) => {
+                              console.error("Payment failed:", error);
+                              alert("Pembayaran gagal: " + error.message);
+                         },
+                         onClose: () => {
+                              console.log("Payment popup closed");
+                         },
+                    });
+               } else {
+                    alert(
+                         "Gagal membuat pembayaran: " +
+                              (data.error || JSON.stringify(data))
+                    );
+               }
+          } catch (err) {
+               console.error("Payment error:", err);
+               alert("Terjadi error pembayaran: " + err.message);
+          }
+          setLoading(false);
+     };
+
      const currentStep = 1;
 
      return (
@@ -25,12 +84,8 @@ export default function PaymentPage() {
                     <h1 className="text-3xl font-bold mb-8 text-center">
                          Your Order
                     </h1>
-
                     <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-2xl p-8 lg:p-12 shadow-sm">
-                         {/* Stepper */}
                          <PaymentStepper currentStep={currentStep} />
-
-                         {/* Judul Pembayaran */}
                          <div className="flex items-center justify-center gap-3 mb-8">
                               <h2 className="text-xl font-semibold">
                                    Bayar dengan
@@ -41,10 +96,7 @@ export default function PaymentPage() {
                                    className="h-6"
                               />
                          </div>
-
-                         {/* Konten Utama */}
                          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
-                              {/* Kiri: QR Code */}
                               <div className="flex justify-center">
                                    <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg">
                                         <img
@@ -54,8 +106,6 @@ export default function PaymentPage() {
                                         />
                                    </div>
                               </div>
-
-                              {/* Kanan: Detail Pembayaran */}
                               <div className="space-y-4 text-sm">
                                    <div className="flex">
                                         <span className="w-40 text-gray-500">
@@ -97,6 +147,13 @@ export default function PaymentPage() {
                                    </div>
                               </div>
                          </div>
+                         <button
+                              onClick={handlePay}
+                              disabled={loading}
+                              className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition mt-8"
+                         >
+                              {loading ? "Memproses..." : "Bayar Sekarang"}
+                         </button>
                     </div>
                </main>
           </div>
