@@ -22,24 +22,33 @@ const PaymentStepper = ({ currentStep }) => {
      ];
 
      return (
-          <div className="w-full max-w-md mx-auto flex items-center justify-between mb-12">
-               {steps.map((step, index) => (
-                    <React.Fragment key={index}>
-                         <StepperIcon
-                              icon={step.icon}
-                              isActive={index <= currentStep}
-                         />
-                         {index < steps.length - 1 && (
-                              <div
-                                   className={`flex-grow h-1 mx-2 ${
-                                        index < currentStep
-                                             ? "bg-purple-600"
-                                             : "bg-gray-200"
-                                   }`}
-                              ></div>
-                         )}
-                    </React.Fragment>
-               ))}
+          <div className="w-full max-w-md mx-auto flex flex-col items-center mb-12">
+               <div className="flex items-center justify-between w-full">
+                    {steps.map((step, index) => (
+                         <React.Fragment key={index}>
+                              <StepperIcon
+                                   icon={step.icon}
+                                   isActive={index <= currentStep}
+                              />
+                              {index < steps.length - 1 && (
+                                   <div
+                                        className={`flex-grow h-1 mx-2 ${
+                                             index < currentStep
+                                                  ? "bg-purple-600"
+                                                  : "bg-gray-200"
+                                        }`}
+                                   ></div>
+                              )}
+                         </React.Fragment>
+                    ))}
+               </div>
+               <div className="flex justify-between w-full mt-2 text-xs text-gray-500">
+                    {steps.map((step, index) => (
+                         <span key={index} className="w-1/2 text-center">
+                              {step.label}
+                         </span>
+                    ))}
+               </div>
           </div>
      );
 };

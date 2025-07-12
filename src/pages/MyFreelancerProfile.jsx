@@ -62,44 +62,83 @@ export default function MyFreelancerProfile() {
 
                     // Fetch portfolio (if API exists)
                     try {
+                         console.log("📡 Initial portfolio fetch...");
                          // Coba getPortfolio biasa dulu
                          const portfolioData = await userAPI.getPortfolio();
-                         console.log("Portfolio data from API:", portfolioData);
+                         console.log(
+                              "📦 Initial portfolio data from API:",
+                              portfolioData
+                         );
+                         console.log(
+                              "📊 Portfolio data type:",
+                              typeof portfolioData
+                         );
+                         console.log(
+                              "📊 Portfolio data keys:",
+                              Object.keys(portfolioData || {})
+                         );
 
                          if (
                               portfolioData.portfolio &&
                               portfolioData.portfolio.length > 0
                          ) {
+                              console.log(
+                                   "✅ Portfolio array found with length:",
+                                   portfolioData.portfolio.length
+                              );
+                              console.log(
+                                   "📦 Raw portfolio data:",
+                                   portfolioData.portfolio
+                              );
+
                               // Ensure all URLs are absolute
                               const processedPortfolio =
-                                   portfolioData.portfolio.map((item) => ({
-                                        ...item,
-                                        url:
-                                             item.url &&
-                                             !item.url.startsWith("data:") &&
-                                             !item.url.startsWith("http")
-                                                  ? `https://creatify-backend-production.up.railway.app${item.url}`
-                                                  : item.url,
-                                   }));
+                                   portfolioData.portfolio.map((item) => {
+                                        const processedItem = {
+                                             ...item,
+                                             // Backend returns image_url, not url
+                                             url: item.image,
+                                        };
+
+                                        console.log(
+                                             "🖼️ Initial processed portfolio item:",
+                                             processedItem
+                                        );
+                                        console.log(
+                                             "🔗 Final URL for item:",
+                                             processedItem.url
+                                        );
+                                        return processedItem;
+                                   });
                               setPortfolio(processedPortfolio);
                               console.log(
-                                   "Processed portfolio:",
+                                   "✅ Initial processed portfolio:",
                                    processedPortfolio
                               );
                          } else {
+                              console.log("📭 No initial portfolio data found");
+                              console.log(
+                                   "📊 portfolioData.portfolio:",
+                                   portfolioData.portfolio
+                              );
+                              console.log(
+                                   "📊 portfolioData.portfolio?.length:",
+                                   portfolioData.portfolio?.length
+                              );
                               setPortfolio([]);
                          }
                     } catch (error) {
                          console.log(
-                              "Standard getPortfolio failed:",
+                              "⚠️ Standard getPortfolio failed:",
                               error.message
                          );
                          try {
                               // Jika gagal, coba dengan body (mengirim user_id)
+                              console.log("🔄 Trying getPortfolioWithBody...");
                               const portfolioData =
                                    await userAPI.getPortfolioWithBody(user?.id);
                               console.log(
-                                   "Portfolio data with body:",
+                                   "📦 Portfolio data with body:",
                                    portfolioData
                               );
 
@@ -109,33 +148,40 @@ export default function MyFreelancerProfile() {
                               ) {
                                    // Ensure all URLs are absolute
                                    const processedPortfolio =
-                                        portfolioData.portfolio.map((item) => ({
-                                             ...item,
-                                             url:
-                                                  item.url &&
-                                                  !item.url.startsWith(
-                                                       "data:"
-                                                  ) &&
-                                                  !item.url.startsWith("http")
-                                                       ? `https://creatify-backend-production.up.railway.app${item.url}`
-                                                       : item.url,
-                                        }));
+                                        portfolioData.portfolio.map((item) => {
+                                             const processedItem = {
+                                                  ...item,
+                                                  // Backend returns image_url, not url
+                                                  url:
+                                                       item.image_url ||
+                                                       item.url,
+                                             };
+
+                                             console.log(
+                                                  "🖼️ Body processed portfolio item:",
+                                                  processedItem
+                                             );
+                                             return processedItem;
+                                        });
                                    setPortfolio(processedPortfolio);
                                    console.log(
-                                        "Processed portfolio with body:",
+                                        "✅ Body processed portfolio:",
                                         processedPortfolio
                                    );
                               } else {
+                                   console.log(
+                                        "📭 No body portfolio data found"
+                                   );
                                    setPortfolio([]);
                               }
                          } catch (bodyError) {
                               console.log(
-                                   "Portfolio API not available yet, using dummy data:",
+                                   "⚠️ Portfolio API not available yet, using dummy data:",
                                    bodyError.message
                               );
                               // Use dummy data for now
-                              setPortfolio(
-                                   dummyPortfolio.map((url, index) => ({
+                              const dummyPortfolioData = dummyPortfolio.map(
+                                   (url, index) => ({
                                         id: index + 1,
                                         url: url,
                                         title: `Portfolio ${index + 1}`,
@@ -143,7 +189,12 @@ export default function MyFreelancerProfile() {
                                              index + 1
                                         }`,
                                         isNew: false,
-                                   }))
+                                   })
+                              );
+                              setPortfolio(dummyPortfolioData);
+                              console.log(
+                                   "🎭 Using dummy portfolio data:",
+                                   dummyPortfolioData
                               );
                          }
                     }
@@ -176,40 +227,75 @@ export default function MyFreelancerProfile() {
 
      // Handle portfolio update
      const handlePortfolioUpdate = async (newPortfolio) => {
+          console.log("🔄 handlePortfolioUpdate called with:", newPortfolio);
+
           // Selalu fetch ulang dari backend setelah ada perubahan
           try {
                setLoading(true);
+               console.log("📡 Fetching portfolio from backend...");
+
                const portfolioData = await userAPI.getPortfolio();
+               console.log("📦 Raw portfolio data from API:", portfolioData);
+               console.log("📊 Portfolio data type:", typeof portfolioData);
+               console.log(
+                    "📊 Portfolio data keys:",
+                    Object.keys(portfolioData || {})
+               );
+
                if (
                     portfolioData.portfolio &&
                     portfolioData.portfolio.length > 0
                ) {
+                    console.log(
+                         "✅ Portfolio array found with length:",
+                         portfolioData.portfolio.length
+                    );
                     // Ensure all URLs are absolute
                     const processedPortfolio = portfolioData.portfolio.map(
-                         (item) => ({
-                              ...item,
-                              url:
-                                   item.url &&
-                                   !item.url.startsWith("data:") &&
-                                   !item.url.startsWith("http")
-                                        ? `https://creatify-backend-production.up.railway.app${item.url}`
-                                        : item.url,
-                         })
+                         (item) => {
+                              const processedItem = {
+                                   ...item,
+                                   // Backend returns image_url, not url
+                                   url: item.image,
+                              };
+
+                              console.log(
+                                   "🖼️ Processed portfolio item:",
+                                   processedItem
+                              );
+                              return processedItem;
+                         }
                     );
+
                     setPortfolio(processedPortfolio);
                     console.log(
                          "✅ Portfolio refreshed from backend:",
                          processedPortfolio
                     );
                } else {
+                    console.log(
+                         "📭 No portfolio data found, setting empty array"
+                    );
+                    console.log(
+                         "📊 portfolioData.portfolio:",
+                         portfolioData.portfolio
+                    );
+                    console.log(
+                         "📊 portfolioData.portfolio?.length:",
+                         portfolioData.portfolio?.length
+                    );
                     setPortfolio([]);
                }
           } catch (error) {
+               console.error("❌ Error refreshing portfolio:", error);
                console.log(
                     "⚠️ Could not refresh from backend, using local data:",
                     error.message
                );
-               if (newPortfolio) setPortfolio(newPortfolio); // fallback ke data lokal jika gagal fetch
+               if (newPortfolio) {
+                    console.log("🔄 Using fallback local data:", newPortfolio);
+                    setPortfolio(newPortfolio); // fallback ke data lokal jika gagal fetch
+               }
           } finally {
                setLoading(false);
           }
@@ -391,7 +477,6 @@ export default function MyFreelancerProfile() {
                                         onPortfolioUpdate={
                                              handlePortfolioUpdate
                                         }
-                                        maxImages={6}
                                    />
                               </div>
                          </div>

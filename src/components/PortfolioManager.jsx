@@ -1,12 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Plus, X, Upload, Trash2 } from "lucide-react";
 import { userAPI } from "../services/api";
 
-const PortfolioManager = ({
-     portfolio = [],
-     onPortfolioUpdate,
-     maxImages = 6,
-}) => {
+const PortfolioManager = ({ portfolio = [], onPortfolioUpdate }) => {
      const [isUploading, setIsUploading] = useState(false);
      const [error, setError] = useState(null);
      const [showUploadModal, setShowUploadModal] = useState(false);
@@ -14,6 +10,24 @@ const PortfolioManager = ({
      const [pendingTitle, setPendingTitle] = useState("");
      const [pendingDescription, setPendingDescription] = useState("");
      const fileInputRef = useRef(null);
+
+     // Debug: Log whenever portfolio prop changes
+     useEffect(() => {
+          console.log(
+               "🔄 PortfolioManager received new portfolio data:",
+               portfolio
+          );
+          console.log("📊 Portfolio length:", portfolio.length);
+          portfolio.forEach((item, index) => {
+               console.log(`📸 Portfolio item ${index}:`, {
+                    id: item.id,
+                    url: item.url,
+                    image_url: item.image_url,
+                    title: item.title,
+                    description: item.description,
+               });
+          });
+     }, [portfolio]);
 
      // Tombol utama sekarang hanya buka modal kosong
      const handleOpenUploadModal = () => {
@@ -58,25 +72,38 @@ const PortfolioManager = ({
 
      const handleUploadPortfolio = async () => {
           if (!pendingImage) return;
+
+          console.log("🚀 Starting portfolio upload...");
           setIsUploading(true);
           setError(null);
+
           try {
-               await userAPI.uploadPortfolioImage(
+               console.log("📤 Uploading image:", pendingImage.file.name);
+               const uploadResult = await userAPI.uploadPortfolioImage(
                     pendingImage.file,
                     pendingTitle,
                     pendingDescription
                );
+
+               console.log("✅ Upload successful:", uploadResult);
+
+               // Trigger parent to refresh portfolio
                if (onPortfolioUpdate) {
+                    console.log("🔄 Triggering portfolio refresh...");
                     onPortfolioUpdate(null); // trigger parent untuk fetch ulang
                }
+
+               // Reset modal state
                setShowUploadModal(false);
                setPendingImage(null);
                setPendingTitle("");
                setPendingDescription("");
                if (fileInputRef.current) fileInputRef.current.value = "";
+
+               console.log("🎉 Portfolio upload completed successfully");
           } catch (err) {
-               setError("Gagal mengupload gambar portofolio");
-               console.error("Upload error:", err);
+               console.error("❌ Upload error:", err);
+               setError("Gagal mengupload gambar portofolio: " + err.message);
           } finally {
                setIsUploading(false);
           }
@@ -122,9 +149,7 @@ const PortfolioManager = ({
                     <div className="flex gap-2">
                          <button
                               onClick={handleOpenUploadModal}
-                              disabled={
-                                   portfolio.length >= maxImages || isUploading
-                              }
+                              disabled={isUploading} // Removed portfolio.length >= maxImages condition
                               className="bg-purple-100 text-purple-700 text-sm font-semibold px-4 py-2 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
                          >
                               <Plus size={16} />
@@ -224,42 +249,67 @@ const PortfolioManager = ({
                )}
 
                {/* Portfolio Grid */}
-               <div className="grid grid-cols-2 gap-4">
-                    {portfolio.map((image, index) => (
-                         <div
-                              key={image.id}
-                              className="relative group rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition-shadow duration-200"
-                         >
-                              <img
-                                   src={image.url}
-                                   alt={`Portfolio item ${index + 1}`}
-                                   className="w-full aspect-square object-cover bg-gray-100"
-                                   onError={(e) => {
-                                        console.error(
-                                             "Image failed to load:",
-                                             image.url
-                                        );
-                                        e.target.src =
-                                             "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-family='Arial' font-size='14'%3EImage not found%3C/text%3E%3C/svg%3E";
-                                   }}
-                                   onLoad={(e) => {
-                                        e.target.style.opacity = "1";
-                                   }}
-                              />
-                              {/* Delete button - Only show on hover */}
-                              <button
-                                   onClick={() => handleRemoveImage(image.id)}
-                                   className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 z-10"
-                                   title="Hapus gambar"
+               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {console.log(
+                         "🎨 Rendering portfolio with",
+                         portfolio.length,
+                         "items:",
+                         portfolio
+                    )}
+                    {portfolio.map((image, index) => {
+                         const imageUrl = image.url || image.image_url;
+                         console.log(`🖼️ Rendering portfolio item ${index}:`, {
+                              id: image.id,
+                              url: imageUrl,
+                              image_url: image.image_url,
+                              title: image.title,
+                              description: image.description,
+                         });
+
+                         return (
+                              <div
+                                   key={image.id}
+                                   className="relative group rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition-shadow duration-200"
                               >
-                                   <Trash2 size={16} />
-                              </button>
-                         </div>
-                    ))}
+                                   <img
+                                        src={imageUrl}
+                                        alt={`Portfolio item ${index + 1}`}
+                                        className="w-full aspect-square object-cover bg-gray-100"
+                                        onError={(e) => {
+                                             console.error(
+                                                  "❌ Image failed to load:",
+                                                  imageUrl,
+                                                  "Original image object:",
+                                                  image
+                                             );
+                                             e.target.src =
+                                                  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-family='Arial' font-size='14'%3EImage not found%3C/text%3E%3C/svg%3E";
+                                        }}
+                                        onLoad={(e) => {
+                                             console.log(
+                                                  "✅ Image loaded successfully:",
+                                                  imageUrl
+                                             );
+                                             e.target.style.opacity = "1";
+                                        }}
+                                   />
+                                   {/* Delete button - Only show on hover */}
+                                   <button
+                                        onClick={() =>
+                                             handleRemoveImage(image.id)
+                                        }
+                                        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 z-10"
+                                        title="Hapus gambar"
+                                   >
+                                        <Trash2 size={16} />
+                                   </button>
+                              </div>
+                         );
+                    })}
 
                     {/* Empty state */}
                     {portfolio.length === 0 && (
-                         <div className="col-span-2 text-center py-8">
+                         <div className="col-span-2 sm:col-span-3 lg:col-span-4 text-center py-8">
                               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                    <Plus size={24} className="text-gray-400" />
                               </div>
@@ -285,8 +335,8 @@ const PortfolioManager = ({
 
                {/* Info */}
                <div className="text-xs text-gray-500">
-                    <p>• Maksimal {maxImages} gambar portofolio</p>
                     <p>• Format: JPG, JPEG, PNG, WebP (maksimal 5MB)</p>
+                    <p>• Limit foto telah dinonaktifkan sementara</p>
                </div>
           </div>
      );

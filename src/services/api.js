@@ -167,6 +167,11 @@ export const userAPI = {
                throw new Error("Token tidak ditemukan - silakan login ulang");
           }
 
+          console.log(
+               "🔍 Fetching portfolio from:",
+               `${API_BASE_URL}/portofolio/all`
+          );
+
           // Jika backend memerlukan body untuk GET request
           const response = await fetch(`${API_BASE_URL}/portofolio/all`, {
                method: "GET",
@@ -178,8 +183,51 @@ export const userAPI = {
                // Jika backend memerlukan body, gunakan POST method
           });
 
-          console.log("Get portofolio response status:", response.status);
-          return handleResponse(response);
+          console.log("📡 Portfolio response status:", response.status);
+          console.log(
+               "📡 Portfolio response headers:",
+               Object.fromEntries(response.headers.entries())
+          );
+
+          const data = await handleResponse(response);
+          console.log("📦 Portfolio API response data:", data);
+
+          // Handle both array and object responses
+          let portfolioArray = [];
+          if (Array.isArray(data)) {
+               console.log(
+                    "✅ API returned array directly, length:",
+                    data.length
+               );
+               portfolioArray = data;
+          } else if (data && data.portfolio && Array.isArray(data.portfolio)) {
+               console.log(
+                    "✅ API returned object with portfolio property, length:",
+                    data.portfolio.length
+               );
+               portfolioArray = data.portfolio;
+          } else {
+               console.warn("⚠️ Unexpected data structure:", data);
+               portfolioArray = [];
+          }
+
+          // Validate data structure
+          if (portfolioArray.length > 0) {
+               console.log("✅ Portfolio data structure is valid");
+               portfolioArray.forEach((item, index) => {
+                    console.log(`📸 Portfolio item ${index}:`, {
+                         id: item.id,
+                         image_url: item.image_url,
+                         url: item.url,
+                         created_at: item.created_at,
+                    });
+               });
+          } else {
+               console.log("📭 No portfolio items found");
+          }
+
+          // Return in expected format
+          return { portfolio: portfolioArray };
      },
 
      // Alternative: Jika backend memerlukan body untuk get portfolio
@@ -192,6 +240,8 @@ export const userAPI = {
 
           const body = userId ? { user_id: userId } : {};
 
+          console.log("🔄 Fetching portfolio with body:", body);
+
           const response = await fetch(`${API_BASE_URL}/portofolio/all`, {
                method: "POST", // Gunakan POST jika backend memerlukan body
                headers: {
@@ -202,10 +252,34 @@ export const userAPI = {
           });
 
           console.log(
-               "Get portofolio with body response status:",
+               "📡 Portfolio with body response status:",
                response.status
           );
-          return handleResponse(response);
+
+          const data = await handleResponse(response);
+          console.log("📦 Portfolio with body response data:", data);
+
+          // Handle both array and object responses
+          let portfolioArray = [];
+          if (Array.isArray(data)) {
+               console.log(
+                    "✅ API returned array directly, length:",
+                    data.length
+               );
+               portfolioArray = data;
+          } else if (data && data.portfolio && Array.isArray(data.portfolio)) {
+               console.log(
+                    "✅ API returned object with portfolio property, length:",
+                    data.portfolio.length
+               );
+               portfolioArray = data.portfolio;
+          } else {
+               console.warn("⚠️ Unexpected data structure:", data);
+               portfolioArray = [];
+          }
+
+          // Return in expected format
+          return { portfolio: portfolioArray };
      },
 
      uploadPortfolioImage: async (imageFile, title = "", description = "") => {
@@ -218,9 +292,17 @@ export const userAPI = {
           const formData = new FormData();
           formData.append("title", title);
           formData.append("description", description);
-          formData.append("image", imageFile); // field name sesuai backend: 'image'
+          formData.append("image", imageFile); // Fixed: use "image" to match backend
 
-          console.log("Uploading portfolio image:", imageFile.name);
+          console.log("📤 Uploading portfolio image:", imageFile.name);
+          console.log("📤 Upload URL:", `${API_BASE_URL}/portofolio/create`);
+          console.log("📤 FormData contents:", {
+               title,
+               description,
+               image: imageFile.name, // Updated field name
+               imageSize: imageFile.size,
+               imageType: imageFile.type,
+          });
 
           const response = await fetch(`${API_BASE_URL}/portofolio/create`, {
                method: "POST",
@@ -231,11 +313,16 @@ export const userAPI = {
                body: formData,
           });
 
+          console.log("📡 Upload response status:", response.status);
           console.log(
-               "Upload portfolio image response status:",
-               response.status
+               "📡 Upload response headers:",
+               Object.fromEntries(response.headers.entries())
           );
-          return handleResponse(response);
+
+          const data = await handleResponse(response);
+          console.log("📦 Upload response data:", data);
+
+          return data;
      },
 
      deletePortfolioImage: async (imageId) => {
